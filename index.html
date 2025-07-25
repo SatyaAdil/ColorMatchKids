@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayo Belajar - Game Cocokkan Warna</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 10px;
+            user-select: none;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background elements */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape1 { width: 80px; height: 80px; background: #ff6b9d; top: 20%; left: 10%; animation-delay: 0s; }
+        .shape2 { width: 120px; height: 120px; background: #4ecdc4; top: 60%; right: 15%; animation-delay: 2s; }
+        .shape3 { width: 60px; height: 60px; background: #ffe66d; bottom: 20%; left: 20%; animation-delay: 4s; }
+        .shape4 { width: 100px; height: 100px; background: #ff8a80; top: 40%; right: 30%; animation-delay: 1s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .title {
+            font-size: 3.5em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b9d, #4ecdc4, #ffe66d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: none;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.2); }
+        }
+
+        .subtitle {
+            font-size: 1.4em;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .author {
+            font-size: 1em;
+            color: #888;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .score-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .score, .progress {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.3em;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .colors-section, .targets-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .colors-section:hover, .targets-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .colors-container, .targets-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
+            justify-items: center;
+        }
+
+        .color-item {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            cursor: grab;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            border: 4px solid rgba(255,255,255,0.3);
+            background-size: 200% 200%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .color-item:hover {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            cursor: grab;
+        }
+
+        .color-item:active {
+            cursor: grabbing;
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .color-item::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+            z-index: -1;
+        }
+
+        .target-slot {
+            width: 120px;
+            height: 120px;
+            border: 4px dashed #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .target-slot:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+        }
+
+        .target-slot.drag-over {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.4);
+        }
+
+        .target-slot.correct {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            animation: successPulse 0.8s ease;
+            box-shadow: 0 0 40px rgba(76, 175, 80, 0.6);
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.2) rotate(5deg); }
+            50% { transform: scale(1.1) rotate(-3deg); }
+            75% { transform: scale(1.15) rotate(2deg); }
+            100% { transform: scale(1); }
+        }
+
+        .target-slot .label {
+            font-size: 1em;
+            color: #666;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.2;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .celebration-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 50px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: celebrationBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes celebrationBounce {
+            0% { transform: scale(0.3) rotate(-10deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .celebration h2 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .celebration p {
+            color: white;
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(45deg, #ff6b9d, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.4em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            font-family: 'Fredoka', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-again-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .play-again-btn:hover::before {
+            left: 100%;
+        }
+
+        .play-again-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .play-again-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Warna-warna dengan gradien yang lebih menarik */
+        .red { 
+            background: linear-gradient(45deg, #ff5757, #ff416c);
+        }
+        .blue { 
+            background: linear-gradient(45deg, #4a90e2, #667eea);
+        }
+        .green { 
+            background: linear-gradient(45deg, #4caf50, #43a047);
+        }
+        .yellow { 
+            background: linear-gradient(45deg, #ffc107, #ffb300);
+        }
+        .purple { 
+            background: linear-gradient(45deg, #9c27b0, #8e24aa);
+        }
+        .orange { 
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+
+        /* Konfetti animation */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b9d;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .title {
+                font-size: 2.5em;
+            }
+            
+            .color-item {
+                width: 80px;
+                height: 80px;
+                font-size: 0.8em;
+            }
+            
+            .target-slot {
+                width: 100px;
+                height: 100px;
+            }
+
+            .colors-section, .targets-section {
+                padding: 25px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .celebration-content {
+                padding: 30px;
+                margin: 20px;
+            }
+
+            .celebration h2 {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .colors-container, .targets-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .score-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Animasi loading untuk elemen */
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-animation">
+        <div class="floating-shape shape1"></div>
+        <div class="floating-shape shape2"></div>
+        <div class="floating-shape shape3"></div>
+        <div class="floating-shape shape4"></div>
+    </div>
+
+    <div class="container">
+        <div class="header fade-in">
+            <h1 class="title">🌈 AYO BELAJAR 🌈</h1>
+            <p class="subtitle">Game Cocokkan Warna yang Seru!</p>
+            <p class="author">Ciptaan: Puji Mulyani</p>
+            <div class="score-container">
+                <div class="score">🏆 Skor: <span id="score">0</span>/6</div>
+                <div class="progress">⭐ Progress: <span id="progress">0</span>%</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="colors-section fade-in">
+                <h3 class="section-title">🎨 Pilih Warna</h3>
+                <div class="colors-container" id="colorsContainer">
+                    <div class="color-item red" draggable="true" data-color="red">MERAH</div>
+                    <div class="color-item blue" draggable="true" data-color="blue">BIRU</div>
+                    <div class="color-item green" draggable="true" data-color="green">HIJAU</div>
+                    <div class="color-item yellow" draggable="true" data-color="yellow">KUNING</div>
+                    <div class="color-item purple" draggable="true" data-color="purple">UNGU</div>
+                    <div class="color-item orange" draggable="true" data-color="orange">ORANYE</div>
+                </div>
+            </div>
+
+            <div class="targets-section fade-in">
+                <h3 class="section-title">🎯 Letakkan Di Sini</h3>
+                <div class="targets-container" id="targetsContainer">
+                    <div class="target-slot" data-target="red">
+                        <span class="label">🍎<br>Apel</span>
+                    </div>
+                    <div class="target-slot" data-target="blue">
+                        <span class="label">🌊<br>Laut</span>
+                    </div>
+                    <div class="target-slot" data-target="green">
+                        <span class="label">🌿<br>Daun</span>
+                    </div>
+                    <div class="target-slot" data-target="yellow">
+                        <span class="label">☀️<br>Matahari</span>
+                    </div>
+                    <div class="target-slot" data-target="purple">
+                        <span class="label">🍇<br>Anggur</span>
+                    </div>
+                    <div class="target-slot" data-target="orange">
+                        <span class="label">🍊<br>Jeruk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ColorMatchingGame {
+            constructor() {
+                this.score = 0;
+                this.totalColors = 6;
+                this.correctMatches = 0;
+                this.init();
+            }
+
+            init() {
+                this.setupDragAndDrop();
+                this.shuffleColors();
+                this.addLoadingAnimations();
+                this.createAudioContext();
+            }
+
+            createAudioContext() {
+                // Create simple audio feedback using Web Audio API
+                this.audioContext = null;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            playSuccessSound() {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(523.25, this.audioContext.currentTime); // C5
+                oscillator.frequency.setValueAtTime(659.25, this.audioContext.currentTime + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, this.audioContext.currentTime + 0.2); // G5
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.3);
+            }
+
+            playErrorSound() {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.2);
+            }
+
+            addLoadingAnimations() {
+                const elements = document.querySelectorAll('.fade-in');
+                elements.forEach((el, index) => {
+                    el.style.animationDelay = `${index * 0.2}s`;
+                });
+            }
+
+            setupDragAndDrop() {
+                const colorItems = document.querySelectorAll('.color-item');
+                const targetSlots = document.querySelectorAll('.target-slot');
+
+                colorItems.forEach(item => {
+                    item.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    item.addEventListener('dragend', this.handleDragEnd.bind(this));
+                });
+
+                targetSlots.forEach(slot => {
+                    slot.addEventListener('dragover', this.handleDragOver.bind(this));
+                    slot.addEventListener('drop', this.handleDrop.bind(this));
+                    slot.addEventListener('dragenter', this.handleDragEnter.bind(this));
+                    slot.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                });
+
+                this.setupTouchEvents(colorItems, targetSlots);
+            }
+
+            setupTouchEvents(colorItems, targetSlots) {
+                let draggedElement = null;
+                let touchStartPos = { x: 0, y: 0 };
+
+                colorItems.forEach(item => {
+                    item.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        draggedElement = item;
+                        const touch = e.touches[0];
+                        touchStartPos = { x: touch.clientX, y: touch.clientY };
+                        item.style.opacity = '0.7';
+                        item.style.transform = 'scale(1.1)';
+                        item.style.zIndex = '1000';
+                    });
+
+                    item.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        if (draggedElement) {
+                            const touch = e.touches[0];
+                            const deltaX = touch.clientX - touchStartPos.x;
+                            const deltaY = touch.clientY - touchStartPos.y;
+                            
+                            draggedElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1)`;
+                        }
+                    });
+
+                    item.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        if (draggedElement) {
+                            const touch = e.changedTouches[0];
+                            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const targetSlot = elementBelow?.closest('.target-slot');
+                            
+                            if (targetSlot) {
+                                this.handleMatch(draggedElement, targetSlot);
+                            }
+                            
+                            // Reset transform
+                            draggedElement.style.opacity = '1';
+                            draggedElement.style.transform = '';
+                            draggedElement.style.zIndex = '';
+                            draggedElement = null;
+                        }
+                    });
+                });
+            }
+
+            handleDragStart(e) {
+                e.dataTransfer.setData('text/plain', e.target.dataset.color);
+                e.target.style.opacity = '0.7';
+            }
+
+            handleDragEnd(e) {
+                e.target.style.opacity = '1';
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+            }
+
+            handleDragEnter(e) {
+                e.preventDefault();
+                e.target.closest('.target-slot').classList.add('drag-over');
+            }
+
+            handleDragLeave(e) {
+                e.target.closest('.target-slot').classList.remove('drag-over');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                const targetSlot = e.target.closest('.target-slot');
+                targetSlot.classList.remove('drag-over');
+                
+                const draggedColor = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.querySelector(`[data-color="${draggedColor}"]`);
+                
+                this.handleMatch(draggedElement, targetSlot);
+            }
+
+            handleMatch(draggedElement, targetSlot) {
+                const draggedColor = draggedElement.dataset.color;
+                const targetColor = targetSlot.dataset.target;
+
+                if (draggedColor === targetColor && !targetSlot.classList.contains('correct')) {
+                    this.playSuccessAnimation(targetSlot, draggedElement);
+                    this.playSuccessSound();
+                    this.updateScore();
+                    this.correctMatches++;
+                    
+                    if (this.correctMatches === this.totalColors) {
+                        setTimeout(() => this.showCelebration(), 800);
+                    }
+                } else if (draggedColor !== targetColor) {
+                    this.playErrorAnimation(draggedElement);
+                    this.playErrorSound();
+                }
+            }
+
+            playSuccessAnimation(targetSlot, colorItem) {
+                targetSlot.classList.add('correct');
+                
+                // Create a clone of the color item for the slot
+                const colorClone = colorItem.cloneNode(true);
+                colorClone.style.width = '90px';
+                colorClone.style.height = '90px';
+                colorClone.style.margin = '0';
+                colorClone.style.cursor = 'default';
+                colorClone.draggable = false;
+                
+                targetSlot.innerHTML = '';
+                targetSlot.appendChild(colorClone);
+                
+                // Hide original color item with animation
+                colorItem.style.transition = 'all 0.5s ease';
+                colorItem.classList.add('hidden');
+                
+                // Add celebration particles
+                this.createParticles(targetSlot);
+            }
+
+            createParticles(element) {
+                const colors = ['#ff6b9d', '#4ecdc4', '#ffe66d', '#ff8a80', '#a8e6cf'];
+                const rect = element.getBoundingClientRect();
+                
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'fixed';
+                    particle.style.left = rect.left + rect.width / 2 + 'px';
+                    particle.style.top = rect.top + rect.height / 2 + 'px';
+                    particle.style.width = '8px';
+                    particle.style.height = '8px';
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.borderRadius = '50%';
+                    particle.style.pointerEvents = 'none';
+                    particle.style.zIndex = '999';
+                    
+                    document.body.appendChild(particle);
+                    
+                    const angle = (Math.PI * 2 * i) / 15;
+                    const velocity = 100 + Math.random() * 50;
+                    const vx = Math.cos(angle) * velocity;
+                    const vy = Math.sin(angle) * velocity;
+                    
+                    particle.animate([
+                        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                        { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: 1000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    }).onfinish = () => particle.remove();
+                }
+            }
+
+            playErrorAnimation(element) {
+                element.style.animation = 'none';
+                element.offsetHeight;
+                element.style.animation = 'shake 0.6s ease-in-out';
+                
+                setTimeout(() => {
+                    element.style.animation = '';
+                }, 600);
+
+                if (!document.querySelector('#shake-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'shake-style';
+                    style.textContent = `
+                        @keyframes shake {
+                            0%, 100% { transform: translateX(0); }
+                            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+                            20%, 40%, 60%, 80% { transform: translateX(8px); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+
+            updateScore() {
+                this.score++;
+                const progress = Math.round((this.score / this.totalColors) * 100);
+                
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('progress').textContent = progress;
+            }
+
+            shuffleColors() {
+                const container = document.getElementById('colorsContainer');
+                const colors = Array.from(container.children);
+                
+                for (let i = colors.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [colors[i], colors[j]] = [colors[j], colors[i]];
+                }
+                
+                colors.forEach(color => container.appendChild(color));
+            }
+
+            showCelebration() {
+                this.createConfetti();
+                
+                const celebration = document.createElement('div');
+                celebration.className = 'celebration';
+                celebration.innerHTML = `
+                    <div class="celebration-content">
+                        <h2>🎉 HEBAT SEKALI! 🎉</h2>
+                        <p>Kamu berhasil mencocokkan semua warna dengan sempurna!</p>
+                        <p>🌟 Skor: ${this.score}/${this.totalColors} 🌟</p>
+                        <button class="play-again-btn" onclick="game.resetGame()">
+                            🎮 Main Lagi Yuk!
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(celebration);
+                
+                // Play celebration sound
+                this.playCelebrationSound();
+            }
+
+            createConfetti() {
+                const colors = ['#ff6b9d', '#4ecdc4', '#ffe66d', '#ff8a80', '#a8e6cf', '#ffd93d', '#6bcf7f'];
+                
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + '%';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 2 + 's';
+                        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                        document.body.appendChild(confetti);
+                        
+                        setTimeout(() => confetti.remove(), 5000);
+                    }, i * 100);
+                }
+            }
+
+            playCelebrationSound() {
+                if (!this.audioContext) return;
+                
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                
+                notes.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                        
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.5);
+                    }, index * 200);
+                });
+            }
+
+            resetGame() {
+                // Remove celebration
+                const celebration = document.querySelector('.celebration');
+                if (celebration) {
+                    celebration.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => celebration.remove(), 300);
+                }
+
+                // Reset score and matches
+                this.score = 0;
+                this.correctMatches = 0;
+                document.getElementById('score').textContent = '0';
+                document.getElementById('progress').textContent = '0';
+
+                // Reset all elements
+                const colorItems = document.querySelectorAll('.color-item');
+                const targetSlots = document.querySelectorAll('.target-slot');
+
+                colorItems.forEach(item => {
+                    item.classList.remove('hidden');
+                    item.style.opacity = '1';
+                    item.style.transform = '';
+                    item.style.transition = '';
+                });
+
+                targetSlots.forEach(slot => {
+                    slot.classList.remove('correct', 'drag-over');
+                    const originalLabels = {
+                        'red': '🍎<br>Apel',
+                        'blue': '🌊<br>Laut', 
+                        'green': '🌿<br>Daun',
+                        'yellow': '☀️<br>Matahari',
+                        'purple': '🍇<br>Anggur',
+                        'orange': '🍊<br>Jeruk'
+                    };
+                    slot.innerHTML = `<span class="label">${originalLabels[slot.dataset.target]}</span>`;
+                });
+
+                this.shuffleColors();
+                
+                // Add fade-in animation to game sections
+                document.querySelectorAll('.colors-section, .targets-section').forEach(section => {
+                    section.style.animation = 'fadeInUp 0.6s ease';
+                });
+
+                // Add CSS for fadeOut animation if not exists
+                if (!document.querySelector('#fadeout-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'fadeout-style';
+                    style.textContent = `
+                        @keyframes fadeOut {
+                            from { opacity: 1; }
+                            to { opacity: 0; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        let game;
+        window.addEventListener('DOMContentLoaded', () => {
+            game = new ColorMatchingGame();
+            
+            // Add welcome animation
+            setTimeout(() => {
+                document.querySelector('.title').style.animation = 'titleGlow 3s ease-in-out infinite alternate';
+            }, 1000);
+        });
+
+        // Prevent context menu on long press (mobile)
+        window.addEventListener('contextmenu', (e) => {
+            if (e.target.classList.contains('color-item')) {
+                e.preventDefault();
+            }
+        });
+
+        // Add keyboard support for accessibility
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const focused = document.activeElement;
+                if (focused.classList.contains('play-again-btn')) {
+                    focused.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
